@@ -31,7 +31,8 @@ void SoftwareRendererImp::fill_sample(int sx, int sy, const Color &color) {
   pixel_color.a = sample_buffer[4 * (sx + sy * sample_buffer_width) + 3] * inv255;
 
   // to change after task 5 is implemented
-  pixel_color = ref->alpha_blending_helper(pixel_color, color);
+  // pixel_color = ref->alpha_blending_helper(pixel_color, color);
+  pixel_color = this->alpha_blending(pixel_color, color);
 
   sample_buffer[4 * (sx + sy * sample_buffer_width)] = (uint8_t)(pixel_color.r * 255);
   sample_buffer[4 * (sx + sy * sample_buffer_width) + 1] = (uint8_t)(pixel_color.g * 255);
@@ -82,6 +83,9 @@ void SoftwareRendererImp::draw_svg( SVG& svg ) {
   svg_bbox_top_left = Vector2D(a.x+1, a.y+1);
   svg_bbox_bottom_right = Vector2D(d.x-1, d.y-1);
 
+  // clear sample buffer
+  std::fill(this->sample_buffer.begin(), this->sample_buffer.end(), 255);
+
   // draw all elements
   for (size_t i = 0; i < svg.elements.size(); ++i) {
     draw_element(svg.elements[i]);
@@ -106,7 +110,7 @@ void SoftwareRendererImp::set_sample_rate( size_t sample_rate ) {
   std::cout << "sample_rate: " << sample_rate << std::endl;
   this->sample_buffer_width = width * sample_rate;
   this->sample_buffer_height = height * sample_rate;
-  set_sample_buffer(width * sample_rate, height * sample_rate);
+  set_sample_buffer(sample_buffer_width, sample_buffer_height);
 }
 
 void SoftwareRendererImp::set_pixel_buffer( unsigned char* pixel_buffer,
@@ -120,13 +124,12 @@ void SoftwareRendererImp::set_pixel_buffer( unsigned char* pixel_buffer,
 
   this->sample_buffer_width = width * sample_rate;
   this->sample_buffer_height = height * sample_rate;
-  set_sample_buffer(width * sample_rate, height * sample_rate);
+  set_sample_buffer(sample_buffer_width, sample_buffer_height);
 }
 
 // For Task 2
 void SoftwareRendererImp::set_sample_buffer(size_t width, size_t height) {
   this->sample_buffer.assign(4 * width * height, 255);
-  std::fill(this->sample_buffer.begin(), this->sample_buffer.end(), 255);
   // std::fill(sample_buffer.begin(), sample_buffer.end(), 255.f);
 }
 
@@ -523,6 +526,11 @@ Color SoftwareRendererImp::alpha_blending(Color pixel_color, Color color)
 {
   // Task 5
   // Implement alpha compositing
+  pixel_color.a = 1 - (1 - pixel_color.a) * (1 - color.a);
+  pixel_color.r = (1 - color.a) * pixel_color.r + color.r;
+  pixel_color.g = (1 - color.a) * pixel_color.g + color.g;
+  pixel_color.b = (1 - color.a) * pixel_color.b + color.b;
+
   return pixel_color;
 }
 
