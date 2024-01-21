@@ -34,10 +34,12 @@ void SoftwareRendererImp::fill_sample(int sx, int sy, const Color &color) {
   // pixel_color = ref->alpha_blending_helper(pixel_color, color);
   pixel_color = this->alpha_blending(pixel_color, color);
 
-  sample_buffer[4 * (sx + sy * sample_buffer_width)] = (uint8_t)(pixel_color.r * 255);
-  sample_buffer[4 * (sx + sy * sample_buffer_width) + 1] = (uint8_t)(pixel_color.g * 255);
-  sample_buffer[4 * (sx + sy * sample_buffer_width) + 2] = (uint8_t)(pixel_color.b * 255);
-  sample_buffer[4 * (sx + sy * sample_buffer_width) + 3] = (uint8_t)(pixel_color.a * 255);
+  // std::cout << "blended pixel_color, " << pixel_color.r << ", " << pixel_color.g << ", " << pixel_color.b << ", " << pixel_color.a << std::endl;
+
+  sample_buffer[4 * (sx + sy * sample_buffer_width)] = (unsigned char)(pixel_color.r * 255);
+  sample_buffer[4 * (sx + sy * sample_buffer_width) + 1] = (unsigned char)(pixel_color.g * 255);
+  sample_buffer[4 * (sx + sy * sample_buffer_width) + 2] = (unsigned char)(pixel_color.b * 255);
+  sample_buffer[4 * (sx + sy * sample_buffer_width) + 3] = (unsigned char)(pixel_color.a * 255);
 }
 
 // fill samples in the entire pixel specified by pixel coordinates
@@ -107,7 +109,6 @@ void SoftwareRendererImp::set_sample_rate( size_t sample_rate ) {
   // Task 2: 
   // You may want to modify this for supersampling support
   this->sample_rate = sample_rate;
-  std::cout << "sample_rate: " << sample_rate << std::endl;
   this->sample_buffer_width = width * sample_rate;
   this->sample_buffer_height = height * sample_rate;
   set_sample_buffer(sample_buffer_width, sample_buffer_height);
@@ -333,7 +334,6 @@ void SoftwareRendererImp::rasterize_point( float x, float y, Color color ) {
 
 int SoftwareRendererImp::integer_part(float x) {
   return floor(x);
-  // return static_cast<int>(x);
 }
 
 int SoftwareRendererImp::round_number(float x) {
@@ -345,18 +345,17 @@ float SoftwareRendererImp::fractional_part(float x) {
 }
 
 float SoftwareRendererImp::reverse_fractional_part(float x) {
-  return 1 - fractional_part(x);
+  return 1.0f - fractional_part(x);
 }
 
 Color SoftwareRendererImp::apply_brightness(Color color, float brightness)
 {
-  // std::cout << "------" << std::endl;
-  // std::cout << "brightness: " << brightness << std::endl;
-  color.r = brightness * 255;
-  color.g = brightness * 255;
-  color.b = brightness * 255;
-  // color.a = brightness;
-  // std::cout << "color: " << color.r << ", " << color.g << ", " << color.b << std::endl;
+  // std::cout << "--color--" << std::endl;
+  // color.r = (1 - brightness) * 1.0f;
+  // color.g = (1 - brightness) * 1.0f;
+  // color.b = (1 - brightness) * 1.0f;
+  color.a = brightness;
+  // std::cout << "brightness, " << color.r << ", " << color.g << ", " << color.b << ", " << color.a << std::endl;
   return color;
 }
 
@@ -451,10 +450,16 @@ void SoftwareRendererImp::rasterize_line( float x0, float y0,
   // Drawing Smooth Lines with Line Width
 
   // Xiaolin Wu's line algorithm
+
+  // accounting for the fact that pixel centers are at (x + 0.5, y + 0.5)
+  x0 = x0 + 0.5f;
+  x1 = x1 + 0.5f;
+  y0 = y0 + 0.5f;
+  y1 = y1 + 0.5f;
+
   int steep = std::fabs(y1 - y0) > std::fabs(x1 - x0);
 
   if (steep) {
-    // std::cout << std::fabs(y1 - y0) << ", " << std::fabs(x1 - x0) << std::endl;
     std::swap(x0, y0);
     std::swap(x1, y1);
   }
@@ -475,44 +480,43 @@ void SoftwareRendererImp::rasterize_line( float x0, float y0,
   // handle first endpoint
   float x_end = static_cast<float> (round_number(x0));
   float y_end = y0 + gradient * (x_end - x0);
-  float x_gap = reverse_fractional_part(x0 + 0.5);
-  int x_px_l1 = static_cast<int>(x_end);
-  int y_lx_l1 = integer_part(y_end);
+  float x_gap = reverse_fractional_part(x0 + 0.5f);
+  int x_px_l1 = static_cast<int>(x_end) - 1;
+  int y_px_l1 = integer_part(y_end) - 1;
   if (steep) {
-    rasterize_point(y_lx_l1, x_px_l1, apply_brightness(color, reverse_fractional_part(y_end) * x_gap));
-    rasterize_point(y_lx_l1 + 1, x_px_l1, apply_brightness(color, fractional_part(y_end) * x_gap));
+    fill_pixel(y_px_l1, x_px_l1, apply_brightness(color, reverse_fractional_part(y_end) * x_gap));
+    fill_pixel(y_px_l1 + 1, x_px_l1, apply_brightness(color, fractional_part(y_end) * x_gap));
   } else {
-    rasterize_point(x_px_l1, y_lx_l1, apply_brightness(color, reverse_fractional_part(y_end) * x_gap));
-    rasterize_point(x_px_l1, y_lx_l1 + 1, apply_brightness(color, fractional_part(y_end) * x_gap));
+    fill_pixel(x_px_l1, y_px_l1, apply_brightness(color, reverse_fractional_part(y_end) * x_gap));
+    fill_pixel(x_px_l1, y_px_l1 + 1, apply_brightness(color, fractional_part(y_end) * x_gap));
   }
-  float intery = y_end + gradient;
-
+  float intery = y_end + gradient - 1;
 
   // handle second endpoint
   float x_end_2 = static_cast<float>(round_number(x1));
   float y_end_2 = y1 + gradient * (x_end_2 - x1);
-  float x_gap_2 = fractional_part(x1 + 0.5);
-  int x_px_l2 = static_cast<int>(x_end_2);
-  int y_px_l2 = integer_part(y_end_2);
+  float x_gap_2 = fractional_part(x1 + 0.5f);
+  int x_px_l2 = static_cast<int>(x_end_2) - 1;
+  int y_px_l2 = integer_part(y_end_2) - 1;
   if (steep) {
-    rasterize_point(y_px_l2, x_px_l2, apply_brightness(color, reverse_fractional_part(y_end_2) * x_gap_2));
-    rasterize_point(y_px_l2 + 1, x_px_l2, apply_brightness(color, fractional_part(y_end_2) * x_gap_2));
+    fill_pixel(y_px_l2, x_px_l2, apply_brightness(color, reverse_fractional_part(y_end_2) * x_gap_2));
+    fill_pixel(y_px_l2 + 1, x_px_l2, apply_brightness(color, fractional_part(y_end_2) * x_gap_2));
   } else {
-    rasterize_point(x_px_l2, y_px_l2, apply_brightness(color, reverse_fractional_part(y_end_2) * x_gap_2));
-    rasterize_point(x_px_l2, y_px_l2 + 1, apply_brightness(color, fractional_part(y_end_2) * x_gap_2));
+    fill_pixel(x_px_l2, y_px_l2, apply_brightness(color, reverse_fractional_part(y_end_2) * x_gap_2));
+    fill_pixel(x_px_l2, y_px_l2 + 1, apply_brightness(color, fractional_part(y_end_2) * x_gap_2));
   }
 
   // main loop
   if (steep) {
     for (int x = x_px_l1 + 1; x <= x_px_l2 - 1; x++) {
-      rasterize_point(integer_part(intery), x, apply_brightness(color, reverse_fractional_part(intery)));
-      rasterize_point(integer_part(intery) + 1, x, apply_brightness(color, fractional_part(intery)));
+      fill_pixel(integer_part(intery), x, apply_brightness(color, reverse_fractional_part(intery)));
+      fill_pixel(integer_part(intery) + 1, x, apply_brightness(color, fractional_part(intery)));
       intery += gradient;
     }
   } else {
     for (int x = x_px_l1 + 1; x <= x_px_l2 - 1; x++) {
-      rasterize_point(x, integer_part(intery), apply_brightness(color, reverse_fractional_part(intery)));
-      rasterize_point(x, integer_part(intery) + 1, apply_brightness(color, fractional_part(intery)));
+      fill_pixel(x, integer_part(intery), apply_brightness(color, reverse_fractional_part(intery)));
+      fill_pixel(x, integer_part(intery) + 1, apply_brightness(color, fractional_part(intery)));
       intery += gradient;
     }
   }
@@ -632,6 +636,13 @@ void SoftwareRendererImp::resolve( void ) {
 Color SoftwareRendererImp::alpha_blending(Color pixel_color, Color color)
 {
   // Task 5
+  // pixel_color.r = pixel_color.r * pixel_color.a;
+  // pixel_color.g = pixel_color.g * pixel_color.a;
+  // pixel_color.b = pixel_color.b * pixel_color.a;
+  // color.r = color.r * color.a;
+  // color.g = color.g * color.a;
+  // color.b = color.b * color.a;
+
   // Implement alpha compositing
   pixel_color.a = 1 - (1 - pixel_color.a) * (1 - color.a);
   pixel_color.r = (1 - color.a) * pixel_color.r + color.r;
