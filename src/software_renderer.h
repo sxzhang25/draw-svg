@@ -162,6 +162,15 @@ private:
 
 	void set_sample_buffer(size_t width, size_t height);
 
+	// Xiaolin Wu Helper
+	// void swap(float* a, float* b);
+	// float absolute(float x);
+	int integer_part(float x);
+	int round_number(float x);
+	float fractional_part(float x);
+	float reverse_fractional_part(float x);
+	Color apply_brightness(Color color, float brightness);
+
 	SoftwareRendererRef *ref;
 }; // class SoftwareRendererImp
 

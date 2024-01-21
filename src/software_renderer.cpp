@@ -320,6 +320,46 @@ void SoftwareRendererImp::rasterize_point( float x, float y, Color color ) {
   fill_pixel(sx, sy, color);
 }
 
+// void SoftwareRendererImp::swap(float* a, float* b) {
+//   float temp = *a;
+//   *a = *b;
+//   *b = temp;
+// }
+
+// float SoftwareRendererImp::absolute(float x) {
+//   if (x < 0) return -x;
+//   else return x;
+// }
+
+int SoftwareRendererImp::integer_part(float x) {
+  return floor(x);
+  // return static_cast<int>(x);
+}
+
+int SoftwareRendererImp::round_number(float x) {
+  return integer_part(x + 0.5f);
+}
+
+float SoftwareRendererImp::fractional_part(float x) {
+  return x - integer_part(x);
+}
+
+float SoftwareRendererImp::reverse_fractional_part(float x) {
+  return 1 - fractional_part(x);
+}
+
+Color SoftwareRendererImp::apply_brightness(Color color, float brightness)
+{
+  // std::cout << "------" << std::endl;
+  // std::cout << "brightness: " << brightness << std::endl;
+  color.r = brightness * 255;
+  color.g = brightness * 255;
+  color.b = brightness * 255;
+  // color.a = brightness;
+  // std::cout << "color: " << color.r << ", " << color.g << ", " << color.b << std::endl;
+  return color;
+}
+
 void SoftwareRendererImp::rasterize_line( float x0, float y0,
                                           float x1, float y1,
                                           Color color) {
@@ -328,87 +368,154 @@ void SoftwareRendererImp::rasterize_line( float x0, float y0,
   // Implement Bresenham's algorithm (delete the line below and implement your own)
   // ref->rasterize_line_helper(x0, y0, x1, y1, width, height, color, this);
 
-  float eps = 0;
-  float x;
-  float y;
-  float m = (y1 - y0) / (x1 - x0);
+  // float eps = 0;
+  // float x;
+  // float y;
+  // float m = (y1 - y0) / (x1 - x0);
 
-  // Special case: vertical line.
-  if (x0 == x1) {
-    for (int y = (int)floor(min(y0, y1)); y <= (int)floor(max(y0, y1)); y++) {
-      rasterize_point(x0, y, color);
-    }
-  } else {
-    if (0 <= m && m <= 1) { // Case: 0 <= m <= 1.
-      if (x0 > x1) {
-        rasterize_line(x1, y1, x0, y0, color);
-      } else {
-        y = y0;
-        for (int dx = 0; dx <= (int)floor(x1 - x0); dx++) {
-          x = x0 + dx;
-          rasterize_point(x, y, color);
-          if (eps + m < 0.5) {
-            eps += m;
-          } else {
-            y += 1;
-            eps += m - 1;
-          }
-        }
-      }
-    } else if (m > 1) { // Case: m > 1.
-      if (y0 > y1) {
-        rasterize_line(x1, y1, x0, y0, color);
-      } else {
-        x = x0;
-        for (int dy = 0; dy <= (int)floor(y1 - y0); dy++) {
-          y = y0 + dy;
-          rasterize_point(x, y, color);
-          if (eps + 1 / m < 0.5) {
-            eps += 1 / m;
-          } else {
-            x += 1;
-            eps += 1 / m - 1;
-          }
-        }
-      }
-    } 
-    else if (m < 0 && m >= -1) { // Case: 0 > m >= -1.
-      if (x1 > x0) {
-        rasterize_line(x1, y1, x0, y0, color);
-      } else {
-        y = y0;
-        for (int dx = 0; dx >= (int)floor(x1 - x0); dx--) {
-          x = x0 + dx;
-          rasterize_point(x, y, color);
-          if (eps + m > -0.5) {
-            eps += m;
-          } else {
-            y += 1;
-            eps += m + 1;
-          }
-        }
-      }
-    } else { // Case: m < -1.
-      if (y1 > y0) {
-        rasterize_line(x1, y1, x0, y0, color);
-      } else {
-        x = x0;
-        for (int dy = 0; dy >= (int)floor(y1 - y0); dy--) {
-          y = y0 + dy;
-          rasterize_point(x, y, color);
-          if (eps + 1 / m > -0.5) {
-            eps += 1 / m;
-          } else {
-            x += 1;
-            eps += 1 / m + 1;
-          }
-        }
-      }
-    }
-  }
+  // // Special case: vertical line.
+  // if (x0 == x1) {
+  //   for (int y = (int)floor(min(y0, y1)); y <= (int)floor(max(y0, y1)); y++) {
+  //     rasterize_point(x0, y, color);
+  //   }
+  // } else {
+  //   if (0 <= m && m <= 1) { // Case: 0 <= m <= 1.
+  //     if (x0 > x1) {
+  //       rasterize_line(x1, y1, x0, y0, color);
+  //     } else {
+  //       y = y0;
+  //       for (int dx = 0; dx <= (int)floor(x1 - x0); dx++) {
+  //         x = x0 + dx;
+  //         rasterize_point(x, y, color);
+  //         if (eps + m < 0.5) {
+  //           eps += m;
+  //         } else {
+  //           y += 1;
+  //           eps += m - 1;
+  //         }
+  //       }
+  //     }
+  //   } else if (m > 1) { // Case: m > 1.
+  //     if (y0 > y1) {
+  //       rasterize_line(x1, y1, x0, y0, color);
+  //     } else {
+  //       x = x0;
+  //       for (int dy = 0; dy <= (int)floor(y1 - y0); dy++) {
+  //         y = y0 + dy;
+  //         rasterize_point(x, y, color);
+  //         if (eps + 1 / m < 0.5) {
+  //           eps += 1 / m;
+  //         } else {
+  //           x += 1;
+  //           eps += 1 / m - 1;
+  //         }
+  //       }
+  //     }
+  //   } 
+  //   else if (m < 0 && m >= -1) { // Case: 0 > m >= -1.
+  //     if (x1 > x0) {
+  //       rasterize_line(x1, y1, x0, y0, color);
+  //     } else {
+  //       y = y0;
+  //       for (int dx = 0; dx >= (int)floor(x1 - x0); dx--) {
+  //         x = x0 + dx;
+  //         rasterize_point(x, y, color);
+  //         if (eps + m > -0.5) {
+  //           eps += m;
+  //         } else {
+  //           y += 1;
+  //           eps += m + 1;
+  //         }
+  //       }
+  //     }
+  //   } else { // Case: m < -1.
+  //     if (y1 > y0) {
+  //       rasterize_line(x1, y1, x0, y0, color);
+  //     } else {
+  //       x = x0;
+  //       for (int dy = 0; dy >= (int)floor(y1 - y0); dy--) {
+  //         y = y0 + dy;
+  //         rasterize_point(x, y, color);
+  //         if (eps + 1 / m > -0.5) {
+  //           eps += 1 / m;
+  //         } else {
+  //           x += 1;
+  //           eps += 1 / m + 1;
+  //         }
+  //       }
+  //     }
+  //   }
+  // }
 
   // Advanced Task
   // Drawing Smooth Lines with Line Width
+
+  // Xiaolin Wu's line algorithm
+  int steep = std::fabs(y1 - y0) > std::fabs(x1 - x0);
+
+  if (steep) {
+    // std::cout << std::fabs(y1 - y0) << ", " << std::fabs(x1 - x0) << std::endl;
+    std::swap(x0, y0);
+    std::swap(x1, y1);
+  }
+
+  if (x0 > x1) {
+    std::swap(x0, x1);
+    std::swap(y0, y1);
+  }
+
+  // slope
+  float dx = x1 - x0;
+  float dy = y1 - y0;
+  float gradient = dy / dx;
+  if (dx == 0.0) {
+    gradient = 1.0;
+  }
+
+  // handle first endpoint
+  float x_end = static_cast<float> (round_number(x0));
+  float y_end = y0 + gradient * (x_end - x0);
+  float x_gap = reverse_fractional_part(x0 + 0.5);
+  int x_px_l1 = static_cast<int>(x_end);
+  int y_lx_l1 = integer_part(y_end);
+  if (steep) {
+    rasterize_point(y_lx_l1, x_px_l1, apply_brightness(color, reverse_fractional_part(y_end) * x_gap));
+    rasterize_point(y_lx_l1 + 1, x_px_l1, apply_brightness(color, fractional_part(y_end) * x_gap));
+  } else {
+    rasterize_point(x_px_l1, y_lx_l1, apply_brightness(color, reverse_fractional_part(y_end) * x_gap));
+    rasterize_point(x_px_l1, y_lx_l1 + 1, apply_brightness(color, fractional_part(y_end) * x_gap));
+  }
+  float intery = y_end + gradient;
+
+
+  // handle second endpoint
+  float x_end_2 = static_cast<float>(round_number(x1));
+  float y_end_2 = y1 + gradient * (x_end_2 - x1);
+  float x_gap_2 = fractional_part(x1 + 0.5);
+  int x_px_l2 = static_cast<int>(x_end_2);
+  int y_px_l2 = integer_part(y_end_2);
+  if (steep) {
+    rasterize_point(y_px_l2, x_px_l2, apply_brightness(color, reverse_fractional_part(y_end_2) * x_gap_2));
+    rasterize_point(y_px_l2 + 1, x_px_l2, apply_brightness(color, fractional_part(y_end_2) * x_gap_2));
+  } else {
+    rasterize_point(x_px_l2, y_px_l2, apply_brightness(color, reverse_fractional_part(y_end_2) * x_gap_2));
+    rasterize_point(x_px_l2, y_px_l2 + 1, apply_brightness(color, fractional_part(y_end_2) * x_gap_2));
+  }
+
+  // main loop
+  if (steep) {
+    for (int x = x_px_l1 + 1; x <= x_px_l2 - 1; x++) {
+      rasterize_point(integer_part(intery), x, apply_brightness(color, reverse_fractional_part(intery)));
+      rasterize_point(integer_part(intery) + 1, x, apply_brightness(color, fractional_part(intery)));
+      intery += gradient;
+    }
+  } else {
+    for (int x = x_px_l1 + 1; x <= x_px_l2 - 1; x++) {
+      rasterize_point(x, integer_part(intery), apply_brightness(color, reverse_fractional_part(intery)));
+      rasterize_point(x, integer_part(intery) + 1, apply_brightness(color, fractional_part(intery)));
+      intery += gradient;
+    }
+  }
 }
 
 void SoftwareRendererImp::rasterize_triangle( float x0, float y0,
