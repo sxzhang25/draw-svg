@@ -350,12 +350,11 @@ float SoftwareRendererImp::reverse_fractional_part(float x) {
 
 Color SoftwareRendererImp::apply_brightness(Color color, float brightness)
 {
-  // std::cout << "--color--" << std::endl;
-  // color.r = (1 - brightness) * 1.0f;
-  // color.g = (1 - brightness) * 1.0f;
-  // color.b = (1 - brightness) * 1.0f;
+  // with premultiplied alpha
+  color.r = color.r * brightness;
+  color.g = color.g * brightness;
+  color.b = color.b * brightness;
   color.a = brightness;
-  // std::cout << "brightness, " << color.r << ", " << color.g << ", " << color.b << ", " << color.a << std::endl;
   return color;
 }
 
@@ -636,13 +635,6 @@ void SoftwareRendererImp::resolve( void ) {
 Color SoftwareRendererImp::alpha_blending(Color pixel_color, Color color)
 {
   // Task 5
-  // pixel_color.r = pixel_color.r * pixel_color.a;
-  // pixel_color.g = pixel_color.g * pixel_color.a;
-  // pixel_color.b = pixel_color.b * pixel_color.a;
-  // color.r = color.r * color.a;
-  // color.g = color.g * color.a;
-  // color.b = color.b * color.a;
-
   // Implement alpha compositing
   pixel_color.a = 1 - (1 - pixel_color.a) * (1 - color.a);
   pixel_color.r = (1 - color.a) * pixel_color.r + color.r;
