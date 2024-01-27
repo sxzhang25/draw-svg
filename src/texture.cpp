@@ -132,9 +132,22 @@ Color Sampler2DImp::sample_bilinear(Texture& tex,
   float x = u * tex.width - 0.5f;
   float y = v * tex.height - 0.5f;
   int xl = floor(x);
+  // repeat if out of bounds
+  if (xl < 0) {
+    xl = 0;
+  }
   int xr = xl + 1;
+  if (xr >= tex.width) {
+    xr = tex.width - 1;
+  }
   int yt = floor(y);
+  if (yt < 0) {
+    yt = 0;
+  }
   int yb = yt + 1;
+  if (yb >= tex.height) {
+    yb = tex.height - 1;
+  }
   
   int tl_i = uv_to_tex(tex, xl, yt);
   int tr_i = uv_to_tex(tex, xr, yt);
