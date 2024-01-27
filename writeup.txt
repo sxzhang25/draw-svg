@@ -1,0 +1,7 @@
+Members: Jiaju Ma (jiajuma), Sharon Zhang (szhang25)
+Work distribution:
+- Jiaju: Task 2, Task 5, Xiaolin Wu's line algorithm
+- Sharon: Task 0, Task 1, Task 3, Task 4, Task 6
+
+Description:
+We also implemented Xiaolin Wu's anti-aliased line rendering algorithm.
