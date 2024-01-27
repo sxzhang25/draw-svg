@@ -581,13 +581,10 @@ void SoftwareRendererImp::rasterize_image( float x0, float y0,
                                            Texture& tex ) {
   // Task 4: 
   // Implement image rasterization
-  // std::cout << "rasterize_image" << std::endl;
-  // std::cout << x0 << ", " << y0 << ", " << x1 << ", " << y1 << std::endl;
-  for (int x = floor(x0); x < ceil(x1); ++x) {
-    for (int y = floor(y0); y < ceil(y1); ++y) {
+  for (int x = ceil(x0); x < floor(x1); ++x) {
+    for (int y = ceil(y0); y < floor(y1); ++y) {
       float u = (float)(x + 0.5 - x0) / (x1 - x0);
       float v = (float)(y + 0.5 - y0) / (y1 - y0);
-      if (u < 0 || u > 1 || v < 0 || v > 1) continue;
       // Color sample_xy = sampler->sample_nearest(tex, u, v, 0);
       Color sample_xy = sampler->sample_bilinear(tex, u, v, 0);
       fill_pixel(x, y, sample_xy);

@@ -119,19 +119,18 @@ Color Sampler2DImp::sample_bilinear(Texture& tex,
   };
 
   auto get_tex_sample = [](Texture& tex, int level, int i) {
-    int i_ = max(0, min((int)(4 * tex.width * tex.height - 4), i));
     Color sample = Color(
-      tex.mipmap[level].texels[i_],
-      tex.mipmap[level].texels[i_ + 1],
-      tex.mipmap[level].texels[i_ + 2],
-      tex.mipmap[level].texels[i_ + 3]
+      tex.mipmap[level].texels[i],
+      tex.mipmap[level].texels[i + 1],
+      tex.mipmap[level].texels[i + 2],
+      tex.mipmap[level].texels[i + 3]
     );
     uint8_to_float( &sample.r, &tex.mipmap[level].texels[i] );
     return sample;
   };
 
-  float x = u * tex.width - 0.5;
-  float y = v * tex.height - 0.5;
+  float x = u * tex.width - 0.5f;
+  float y = v * tex.height - 0.5f;
   int xl = floor(x);
   int xr = xl + 1;
   int yt = floor(y);
